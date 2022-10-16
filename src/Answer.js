@@ -9,11 +9,11 @@ class Answer {
     this.background = this.scene.add.image(0, 0, this.sprite);
 
     this.displayText = this.scene.add
-      .text(this.background.x, this.background.y - 4, this.answer, {
+      .text(this.background.x, this.background.y + 15, this.answer, {
         fontFamily: "LuckiestGuy",
         fontSize: "70px",
-        color: "#FFFFFF",
-        stroke: "#000000",
+        color: "##000000",
+        stroke: "#FFFFFF",
         strokeThickness: 5,
         shadow: { blur: 0, stroke: false, fill: false },
       })

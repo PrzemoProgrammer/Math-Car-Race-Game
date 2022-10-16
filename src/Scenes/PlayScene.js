@@ -11,16 +11,26 @@ class PlayScene extends Phaser.Scene {
     this.load.image("carPorsche", "carPorsche.png");
     this.load.image("operationBackground", "operationBackground.png");
     this.load.image("answerBackground", "answerBackground.png");
-    this.load.image("separator", "separator.png");
-    this.load.image("hole", "hole.png");
     this.load.image("car1", "car1.png");
     this.load.image("car2", "car2.png");
     this.load.image("car3", "car3.png");
     this.load.image("banner", "banner.png");
 
+    this.load.image("car1Crashed", "car1Crashed.png");
+    this.load.image("car2Crashed", "car2Crashed.png");
+    this.load.image("car3Crashed", "car3Crashed.png");
+    this.load.image("carPorscheCrashed", "carPorscheCrashed.png");
+    this.load.image("carLight", "carLight.png");
+    this.load.image("blackOverlay", "blackOverlay.png");
+
     this.load.spritesheet("explosion", "explosion.png", {
       frameWidth: 2800 / 8,
       frameHeight: 301,
+    });
+
+    this.load.spritesheet("nitro", "nitro.png", {
+      frameWidth: 1930 / 10,
+      frameHeight: 322,
     });
 
     this.load.audio("correctAnswer", "audio/correctAnswer.mp3");
@@ -39,10 +49,20 @@ class PlayScene extends Phaser.Scene {
       repeat: 0,
     });
 
+    this.anims.create({
+      key: "nitro",
+      frames: "nitro",
+      frameRate: 15,
+      repeat: -1,
+    });
+
     this.addBackground();
     this.addRoad();
     this.createBanner();
     this.obstacles = [];
+
+    this.blackOverlay = this.add.image(0, 0, "blackOverlay").setOrigin(0, 0);
+
     this.answers = [];
 
     this.car = {
@@ -54,7 +74,7 @@ class PlayScene extends Phaser.Scene {
     this.isGameLost = false;
     this.score = 0;
 
-    this.mainCar = new Car(this, this.car.position2, 900, "carPorsche");
+    this.mainCar = new Car(this, this.car.position2, 870, "carPorsche");
     this.addOperation();
     this.addAnswers();
     this.addScoreText();
@@ -74,14 +94,14 @@ class PlayScene extends Phaser.Scene {
 
   addBackground() {
     this.background = this.add
-      .image(0, 0, "background")
+      .image(0, -this.gh * 0.4, "background")
       .setOrigin(0, 0)
-      .setDisplaySize(this.gw, this.gh);
+      .setDisplaySize(this.gw, this.gh * 1.5);
   }
 
   addRoad() {
     this.road = this.add
-      .tileSprite(this.gw / 2, 0, 639, 1177, "road")
+      .tileSprite(this.gw / 2, 0, 685, 1177, "road")
       .setOrigin(0.5, 0);
 
     this.roadShade = this.add
@@ -107,6 +127,7 @@ class PlayScene extends Phaser.Scene {
   setClickAble(answer) {
     answer.onClick(() => {
       this.addObstacles();
+      this.mainCar.nitro.start();
       if (
         this.getCutNumber(this.operation.result) ===
         this.getCutNumber(answer.displayText.text)
@@ -123,6 +144,7 @@ class PlayScene extends Phaser.Scene {
       this.newOperation = setTimeout(() => {
         this.addOperation();
         this.addAnswers();
+        this.mainCar.nitro.off();
       }, 2000);
     });
   }
@@ -152,12 +174,16 @@ class PlayScene extends Phaser.Scene {
   }
 
   addObstacle(x) {
-    const obstacle = new Obstacle(this, x, -150, "car1");
+    const obstacle = new Obstacle(this, x, -150);
     this.obstacles.push(obstacle);
     this.physics.add.overlap(
       this.mainCar,
       obstacle,
       () => {
+        if (this.isGameLost) return;
+        this.mainCar.lightsOff();
+        this.mainCar.nitro.off();
+        obstacle.setCrashedSprite();
         this.lostGame();
       },
       undefined,
@@ -194,7 +220,6 @@ class PlayScene extends Phaser.Scene {
   }
 
   lostGame() {
-    if (this.isGameLost) return;
     this.isGameLost = true;
     clearTimeout(this.newOperation);
     this.obstacles.forEach((obstacle) => obstacle.drive.stop());
@@ -203,6 +228,7 @@ class PlayScene extends Phaser.Scene {
 
   carCrash() {
     this.carCrashAudio.play();
+    this.mainCar.setCrashedSprite();
     this.mainCar.explosion.setPosition(
       this.mainCar.x,
       this.mainCar.y - this.mainCar.displayHeight / 2
