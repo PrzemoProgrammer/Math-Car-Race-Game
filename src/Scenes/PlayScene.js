@@ -22,7 +22,7 @@ class PlayScene extends Phaser.Scene {
     this.load.image("carPorscheCrashed", "carPorscheCrashed.png");
     this.load.image("carLight", "carLight.png");
     this.load.image("blackOverlay", "blackOverlay.png");
-
+    this.load.image("full-screen", "full-screen.png");
     this.load.spritesheet("explosion", "explosion.png", {
       frameWidth: 2800 / 8,
       frameHeight: 301,
@@ -86,12 +86,31 @@ class PlayScene extends Phaser.Scene {
     this.wrongAnswerAudio.volume = 0.5;
 
     this.carCrashAudio = this.sound.add("carCrash");
+    this.addFullScreenButton();
   }
 
   update() {
+    if (!this.scale.isFullscreen && !this.fullscreen.active) {
+      this.fullscreen.setActive(true);
+      this.fullscreen.setVisible(true);
+    } else if (this.scale.isFullscreen && this.fullscreen.active) {
+      this.fullscreen.setActive(false);
+      this.fullscreen.setVisible(false);
+    }
     if (!this.isGameLost) this.road.tilePositionY -= 8;
   }
+  addFullScreenButton() {
+    this.fullscreen = this.add
+      .image(this.gw - 5, 5, "full-screen")
+      .setOrigin(1, 0)
+      .setScale(2)
+      .setDepth(99999);
+    this.fullscreen.setInteractive();
 
+    this.fullscreen.on("pointerup", () => {
+      this.scale.startFullscreen();
+    });
+  }
   addBackground() {
     this.background = this.add
       .image(0, -this.gh * 0.4, "background")
